@@ -179,6 +179,10 @@ pub trait SpiExt<SPI>: Sized {
         T: Into<Hertz>;
 }
 
+pub struct SpiTxDma<SPI> {
+    _spi: SPI,
+}
+
 macro_rules! spi {
     ($($SPIX:ident: ($spiX:ident, $apbXenr:ident, $spiXen:ident, $pclkX:ident),)+) => {
         $(

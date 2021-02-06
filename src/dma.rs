@@ -19,11 +19,13 @@ use core::{
 };
 
 use as_slice::AsSlice;
+use stm32l0::stm32l0x3::gpioa;
 
 use crate::{
     adc,
     pac::{self, dma1::ch::cr},
     rcc::Rcc,
+    spi::{self, NoMiso},
 };
 
 #[cfg(any(feature = "io-STM32L051", feature = "io-STM32L071"))]
@@ -41,7 +43,7 @@ use crate::{
     serial,
 };
 
-use crate::{pac::SPI1, spi};
+use crate::pac::SPI1;
 
 #[cfg(any(feature = "stm32l0x2", feature = "stm32l0x3"))]
 use crate::pac::SPI2;
@@ -111,7 +113,7 @@ where
     /// Panics, if the length of the buffer is larger than `u16::max_value()`.
     ///
     /// Panics, if the buffer is not aligned to the word size.
-    pub(crate) unsafe fn new<Word>(
+    pub unsafe fn new<Word>(
         handle: &mut Handle,
         target: T,
         channel: C,
@@ -261,7 +263,7 @@ impl Priority {
 }
 
 /// The direction of the DMA transfer
-pub(crate) struct Direction(cr::DIR_A);
+pub struct Direction(cr::DIR_A);
 
 impl Direction {
     pub fn memory_to_peripheral() -> Self {
@@ -510,6 +512,20 @@ macro_rules! impl_target {
     }
 }
 
+#[cfg(any(feature = "io-STM32L051", feature = "io-STM32L071"))]
+impl Target<Channel3>
+    for spi::Spi<
+        pac::SPI1,
+        (
+            crate::gpio::gpioa::PA5<crate::gpio::Analog>,
+            NoMiso,
+            crate::gpio::gpioa::PA7<crate::gpio::Analog>,
+        ),
+    >
+{
+    const REQUEST: u8 = 0b1;
+}
+
 // See STM32L0x2 Reference Manual, table 51 (page 267).
 impl_target!(
     // ADC
@@ -596,7 +612,7 @@ pub struct Ready;
 pub struct Started;
 
 /// Implemented for types, that can be used as a buffer for DMA transfers
-pub(crate) trait Buffer<Word> {
+pub trait Buffer<Word> {
     fn as_ptr(&self) -> *const Word;
     fn len(&self) -> usize;
 }
