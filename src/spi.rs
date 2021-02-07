@@ -259,6 +259,9 @@ macro_rules! spi {
                             .set_bit()
                     });
 
+                    // Enable DMA transfers into SPI
+                    spi.cr2.write(|w| w.txdmaen().set_bit());
+
                     Spi { spi, pins }
                 }
 
