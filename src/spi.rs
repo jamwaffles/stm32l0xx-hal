@@ -259,8 +259,9 @@ macro_rules! spi {
                             .set_bit()
                     });
 
-                    // Enable DMA transfers into SPI
-                    spi.cr2.write(|w| w.txdmaen().set_bit());
+                    // txdmaen: Enable DMA transfers into SPI
+                    // txeie: Enable TX buffer empty interrupt
+                    spi.cr2.write(|w| w.txdmaen().set_bit().txeie().set_bit());
 
                     Spi { spi, pins }
                 }
