@@ -192,7 +192,7 @@ impl Config {
 /// RCC peripheral
 pub struct Rcc {
     pub clocks: Clocks,
-    pub(crate) rb: RCC,
+    pub rb: RCC,
 }
 
 impl Rcc {

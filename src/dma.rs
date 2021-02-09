@@ -242,7 +242,7 @@ impl<T, C, B> fmt::Debug for TransferResources<T, C, B> {
 }
 
 /// The priority of the DMA transfer
-pub struct Priority(cr::PL_A);
+pub struct Priority(pub cr::PL_A);
 
 impl Priority {
     pub fn low() -> Self {
@@ -263,7 +263,7 @@ impl Priority {
 }
 
 /// The direction of the DMA transfer
-pub struct Direction(cr::DIR_A);
+pub struct Direction(pub cr::DIR_A);
 
 impl Direction {
     pub fn memory_to_peripheral() -> Self {
