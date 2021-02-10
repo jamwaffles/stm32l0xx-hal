@@ -191,8 +191,16 @@ impl VcoreRange {
 
 /// Implemented for all low-power modes
 pub trait PowerMode {
-    /// Enters the low-power mode
-    fn enter(&mut self);
+    /// Enters the low-power mode and wait for an interrupt using `asm::wfi`.
+    fn enter(&mut self) {
+        self.enter_no_wfi();
+
+        asm::dsb();
+        asm::wfi();
+    }
+
+    /// Configure low power mode, but do not wait for interrupt.
+    fn enter_no_wfi(&mut self);
 }
 
 /// Sleep mode
@@ -210,12 +218,9 @@ pub struct SleepMode<'r> {
 }
 
 impl PowerMode for SleepMode<'_> {
-    fn enter(&mut self) {
+    fn enter_no_wfi(&mut self) {
         self.pwr.clear_lpsdsr();
         self.scb.clear_sleepdeep();
-
-        asm::dsb();
-        asm::wfi();
     }
 }
 
@@ -240,16 +245,21 @@ impl PowerMode for LowPowerSleepMode<'_> {
         // Switch Vcore to range 2. This is required to enter low-power sleep
         // mode, according to the reference manual, section 6.3.8.
         let old_vcore = self.pwr.get_vcore_range();
-        self.pwr.switch_vcore_range(VcoreRange::Range2);
 
-        self.pwr.set_lpsdsr();
-        self.scb.clear_sleepdeep();
+        self.enter_no_wfi();
 
         asm::dsb();
         asm::wfi();
 
         // Switch back to previous voltage range.
         self.pwr.switch_vcore_range(old_vcore);
+    }
+
+    fn enter_no_wfi(&mut self) {
+        self.pwr.switch_vcore_range(VcoreRange::Range2);
+
+        self.pwr.set_lpsdsr();
+        self.scb.clear_sleepdeep();
     }
 }
 
@@ -280,7 +290,7 @@ pub struct StopMode<'r> {
 }
 
 impl PowerMode for StopMode<'_> {
-    fn enter(&mut self) {
+    fn enter_no_wfi(&mut self) {
         self.scb.set_sleepdeep();
 
         // Restore current clock source after waking up from Stop mode.
@@ -339,10 +349,6 @@ impl PowerMode for StopMode<'_> {
 
         // Wait for WUF to be cleared
         while self.pwr.0.csr.read().wuf().bit_is_set() {}
-
-        // Enter Stop mode
-        asm::dsb();
-        asm::wfi();
     }
 }
 
@@ -375,7 +381,7 @@ pub struct StandbyMode<'r> {
 }
 
 impl PowerMode for StandbyMode<'_> {
-    fn enter(&mut self) {
+    fn enter_no_wfi(&mut self) {
         // Configure Standby mode
         self.scb.set_sleepdeep();
         self.pwr.0.cr.modify(|_, w| {
@@ -387,9 +393,5 @@ impl PowerMode for StandbyMode<'_> {
 
         // Wait for WUF to be cleared
         while self.pwr.0.csr.read().wuf().bit_is_set() {}
-
-        // Enter Standby mode
-        asm::dsb();
-        asm::wfi();
     }
 }
