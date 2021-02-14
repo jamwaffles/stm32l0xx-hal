@@ -344,7 +344,7 @@ impl PowerMode for StopMode<'_> {
             // Enter Stop mode
             w.pdds().stop_mode();
             // Disable internal voltage regulator
-            w.lpds().bit(self.config.disable_voltage_regulator)
+            w.lpds().set_bit()
         });
 
         // Wait for WUF to be cleared
@@ -365,9 +365,6 @@ pub struct StopModeConfig {
     /// - Programmable voltage detector (PVD)
     /// - Internal temperature sensor
     pub ultra_low_power: bool,
-
-    /// Whether to disable the internal voltage regulator or not during stop mode.
-    pub disable_voltage_regulator: bool,
 }
 
 /// Standby mode
