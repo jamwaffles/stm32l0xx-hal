@@ -161,21 +161,15 @@ macro_rules! timers {
                 ) {
                     self.tim.select_master_mode(variant);
                 }
-            }
 
-            impl CountDown for Timer<$TIM> {
-                type Time = Hertz;
-
-                fn start<T>(&mut self, timeout: T)
-                where
-                    T: Into<Hertz>,
-                {
+                /// Configure prescaler to give desired frequency.
+                fn configure_prescaler(&mut self, freq: u32) {
                     // pause
                     self.tim.cr1.modify(|_, w| w.cen().clear_bit());
                     // reset counter
                     self.tim.cnt.reset();
 
-                    let freq = timeout.into().0;
+
                     let ticks = self.clocks.$timclk().0 / freq;
                     let psc = u16((ticks - 1) / (1 << 16)).unwrap();
                     self.tim.psc.write(|w| w.psc().bits(psc));
@@ -188,10 +182,19 @@ macro_rules! timers {
                         }
                     );
 
-                    // Load prescaler value and reset its counter.
-                    // Setting URS makes sure no interrupt is generated.
                     self.tim.cr1.modify(|_, w| w.urs().set_bit());
                     self.tim.egr.write(|w| w.ug().set_bit());
+                }
+            }
+
+            impl CountDown for Timer<$TIM> {
+                type Time = Hertz;
+
+                fn start<T>(&mut self, timeout: T)
+                where
+                    T: Into<Hertz>,
+                {
+                    self.configure_prescaler(timeout.into().0);
 
                     self.tim.cr1.modify(|_, w| w.cen().set_bit());
                 }
