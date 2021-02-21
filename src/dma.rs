@@ -18,8 +18,8 @@ use core::{
     sync::atomic::{compiler_fence, Ordering},
 };
 
+use crate::gpio::gpioa;
 use as_slice::AsSlice;
-use stm32l0::stm32l0x3::gpioa;
 
 use crate::{
     adc,
