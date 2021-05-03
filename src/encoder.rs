@@ -27,6 +27,17 @@ impl PinCh2<TIM21> for gpiob::PB14<Analog> {
     }
 }
 
+impl PinCh1<TIM21> for gpioa::PA2<Analog> {
+    fn into_alt_mode(self) {
+        self.set_alt_mode(AltMode::AF0);
+    }
+}
+impl PinCh2<TIM21> for gpioa::PA3<Analog> {
+    fn into_alt_mode(self) {
+        self.set_alt_mode(AltMode::AF0);
+    }
+}
+
 impl PinCh1<TIM2> for gpioa::PA0<Analog> {
     fn into_alt_mode(self) {
         self.set_alt_mode(AltMode::AF2);
